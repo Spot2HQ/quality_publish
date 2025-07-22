@@ -1,3 +1,5 @@
 credenciales_gamma.py
 credentials_geo.py
 credentials_prod.py
+__pycache__/
+.venv/
