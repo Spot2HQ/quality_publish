@@ -2,7 +2,7 @@ import pandas as pd
 from quality_level_scorer_config import QLS_CONFIG_DF, LS_WEIGHT
 
 
-def get_labels_from_ids(user_industria_role_id, broker_next_id, user_affiliation_id,
+def get_labels_from_ids(user_industria_role_id, user_broker_next_id, user_affiliation_id,
                         spot_exclusive_id, user_level_id):
     """Returns human-readable labels from numeric codes."""
     user_industria_role_map = {
@@ -10,19 +10,19 @@ def get_labels_from_ids(user_industria_role_id, broker_next_id, user_affiliation
     }
     user_level_map = {1: "Gold", 2: "Platinum", 3: "Titanium"}
     user_affiliation_map = {1: "Internal User", 0: "External User"}
-    broker_next_map = {1: "Yes", 0: "No"}
+    user_broker_next_map = {1: "Yes", 0: "No"}
     spot_exclusive_map = {1: "Yes", 0: "No"}
 
     return {
         "user_industria_role": user_industria_role_map.get(user_industria_role_id, "Unknown"),
-        "broker_next": broker_next_map.get(broker_next_id, "No"),
+        "user_broker_next": user_broker_next_map.get(user_broker_next_id, "No"),
         "user_affiliation": user_affiliation_map.get(user_affiliation_id, "Unknown"),
         "spot_exclusive": spot_exclusive_map.get(spot_exclusive_id, "No"),
         "user_level": user_level_map.get(user_level_id, "Others")
     }
 
 
-def level_classifier(user_industria_role_id: int, broker_next_id: int,
+def level_classifier(user_industria_role_id: int, user_broker_next_id: int,
                         user_affiliation_id: int, spot_exclusive_id: int, user_level_id: int):
     """
     Classifies the spot into a level class ID based on user and broker roles.
@@ -35,11 +35,11 @@ def level_classifier(user_industria_role_id: int, broker_next_id: int,
     log_description = ["➊ Level classification based on user and broker attributes:"]
     level_class_id = 8
 
-    labels = get_labels_from_ids(user_industria_role_id, broker_next_id, user_affiliation_id, spot_exclusive_id, user_level_id)
+    labels = get_labels_from_ids(user_industria_role_id, user_broker_next_id, user_affiliation_id, spot_exclusive_id, user_level_id)
     log_description.append("Reading inputs...")
     log_description.append(f"- User role: {labels['user_industria_role']} (ID {user_industria_role_id})")
-    log_description.append(f"- Broker next: {labels['broker_next']} (ID {broker_next_id})")
-    log_description.append(f"- Affiliation: {labels['user_affiliation']} (ID {user_affiliation_id})")
+    log_description.append(f"- User broker next: {labels['user_broker_next']} (ID {user_broker_next_id})")
+    log_description.append(f"- User affiliation: {labels['user_affiliation']} (ID {user_affiliation_id})")
     log_description.append(f"- Exclusive spot: {labels['spot_exclusive']} (ID {spot_exclusive_id})")
     log_description.append(f"- User level: {labels['user_level']} (ID {user_level_id})")
 
@@ -52,7 +52,7 @@ def level_classifier(user_industria_role_id: int, broker_next_id: int,
         log_description.append("Landlord detected → Level class set to 2.")
     elif user_industria_role_id == 2:
         log_description.append("Broker detected. Evaluating broker characteristics...")
-        if broker_next_id == 1:
+        if user_broker_next_id == 1:
             log_description.append("Broker email matches '@nextagents.mx' → Identified as 'Broker Next' → Level class set to 3.")
             level_class_id = 3
         elif user_affiliation_id == 0:
@@ -128,7 +128,7 @@ def qls_with_logs(dic_spot_input: dict):
 
     # Inputs
     user_industria_role_id = dic_spot_input["user_industria_role_id"]
-    broker_next_id = dic_spot_input["broker_next_id"]
+    user_broker_next_id = dic_spot_input["user_broker_next_id"]
     user_affiliation_id = dic_spot_input["user_affiliation_id"]
     spot_exclusive_id = dic_spot_input["spot_exclusive_id"]
     user_level_id = dic_spot_input["user_level_id"]
@@ -137,7 +137,7 @@ def qls_with_logs(dic_spot_input: dict):
 
     # 1. Level classification
     level_class_id, log_lc = level_classifier(
-        user_industria_role_id, broker_next_id, user_affiliation_id,
+        user_industria_role_id, user_broker_next_id, user_affiliation_id,
         spot_exclusive_id, user_level_id
     )
     log_description.extend(log_lc)
@@ -153,7 +153,7 @@ def qls_with_logs(dic_spot_input: dict):
     debug_info = {
         "spot_id": spot_id,
         "user_industria_role_id": user_industria_role_id,
-        "broker_next_id": broker_next_id,
+        "user_broker_next_id": user_broker_next_id,
         "user_affiliation_id": user_affiliation_id,
         "spot_exclusive_id": spot_exclusive_id,
         "user_level_id": user_level_id,
@@ -184,3 +184,5 @@ def output_qls(list_input: list):
         list_output.append(dic_output)
 
     return list_output
+
+output_qls(list_input)
